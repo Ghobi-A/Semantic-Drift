@@ -18,6 +18,7 @@ MEDIATED_GENERATIONS = frozenset({1, 2, 3, 4})
 
 class Condition(str, Enum):
     HUMAN_ONLY = "human_only"
+    HUMAN_EDITED = "human_edited"
     LLM_MEDIATED = "llm_mediated"
 
 
@@ -72,12 +73,28 @@ class MediatedRewrite:
 
 
 @dataclass(frozen=True)
+class HumanEdit:
+    """Human-editor intervention with pseudonymous provenance."""
+    output_text: str
+    editor_code: str
+    instruction_sha256: str
+    edit_run_id: str
+
+    def __post_init__(self) -> None:
+        for name in ("output_text", "editor_code", "edit_run_id"):
+            _nonblank(getattr(self, name), name)
+        if not re.fullmatch(r"[0-9a-f]{64}", self.instruction_sha256):
+            raise ValueError("instruction_sha256 must contain 64 lowercase hex characters")
+
+
+@dataclass(frozen=True)
 class StepRecord:
     generation: int
     participant_code: str
     transmission_source_text: str  # g0 seed or preceding human's output
     received_text: str  # only text the current human sees
     mediated_rewrite: MediatedRewrite | None
+    human_edit: HumanEdit | None
     valence_rating: float
     meaning_paraphrase: str
     confidence: float
@@ -120,6 +137,7 @@ def advance_chain(
     state: ChainState,
     response: ParticipantResponse,
     rewrite: MediatedRewrite | None = None,
+    human_edit: HumanEdit | None = None,
 ) -> ChainState:
     """Append one human generation after enforcing the preregistered schedule.
 
@@ -138,11 +156,21 @@ def advance_chain(
         raise ValueError(f"generation {generation} requires a versioned LLM rewrite")
     if not should_mediate and rewrite is not None:
         raise ValueError(f"generation {generation} prohibits LLM mediation")
+    should_human_edit = state.condition is Condition.HUMAN_EDITED and generation in MEDIATED_GENERATIONS
+    if should_human_edit and not isinstance(human_edit, HumanEdit):
+        raise ValueError(f"generation {generation} requires a versioned human edit")
+    if not should_human_edit and human_edit is not None:
+        raise ValueError(f"generation {generation} prohibits human editing")
+    if should_human_edit and any(
+        r.human_edit is not None and r.human_edit.editor_code == human_edit.editor_code
+        for r in state.records
+    ):
+        raise ValueError("same editor cannot edit multiple generations in a chain")
     if any(r.participant_code == response.participant_code for r in state.records):
         raise ValueError("the same participant cannot return in a later generation of a chain")
 
     source_text = state.seed_text if not state.records else state.records[-1].human_produced_text
-    received_text = rewrite.output_text if should_mediate else source_text
+    received_text = rewrite.output_text if should_mediate else (human_edit.output_text if should_human_edit else source_text)
     if not _contains_word(received_text, state.nonce_form):
         raise ValueError("transmitted text must preserve the exact nonce_form")
     if not _contains_word(response.human_produced_text, state.nonce_form):
@@ -154,6 +182,7 @@ def advance_chain(
         transmission_source_text=source_text,
         received_text=received_text,
         mediated_rewrite=rewrite,
+        human_edit=human_edit,
         valence_rating=response.valence_rating,
         meaning_paraphrase=response.meaning_paraphrase,
         confidence=response.confidence,

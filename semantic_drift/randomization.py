@@ -52,7 +52,7 @@ def allocate_chains(
     k = len(concepts)
     assignments: list[ChainAssignment] = []
 
-    for condition in (Condition.HUMAN_ONLY, Condition.LLM_MEDIATED):
+    for condition in (Condition.HUMAN_ONLY, Condition.HUMAN_EDITED, Condition.LLM_MEDIATED):
         offsets = [index % k for index in range(chains_per_condition)]
         rng.shuffle(offsets)
         for index, offset in enumerate(offsets, start=1):

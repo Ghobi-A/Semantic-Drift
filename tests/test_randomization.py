@@ -21,11 +21,11 @@ class RandomizationTests(unittest.TestCase):
     def test_deterministic_and_balanced(self):
         assignments = self.allocations(8)
         self.assertEqual(assignments, self.allocations(8))
-        self.assertEqual(len(assignments), 16)
+        self.assertEqual(len(assignments), 24)
         self.assertEqual(Counter(a.condition for a in assignments), {
-            Condition.HUMAN_ONLY: 8, Condition.LLM_MEDIATED: 8,
+            Condition.HUMAN_ONLY: 8, Condition.HUMAN_EDITED: 8, Condition.LLM_MEDIATED: 8,
         })
-        self.assertEqual(len({a.chain_id for a in assignments}), 16)
+        self.assertEqual(len({a.chain_id for a in assignments}), 24)
 
     def test_complete_latin_square_counterbalance(self):
         for condition in Condition:

@@ -3,6 +3,7 @@ import unittest
 from semantic_drift.protocol import (
     Condition,
     MediatedRewrite,
+    HumanEdit,
     ParticipantResponse,
     advance_chain,
     start_chain,
@@ -30,6 +31,10 @@ def rewrite(text: str, generation: int):
     )
 
 
+def human_edit(text: str, generation: int):
+    return HumanEdit("Edited: " + text, f"editor-{generation}", "b" * 64, f"edit-{generation}")
+
+
 class ProtocolTests(unittest.TestCase):
     def make_chain(self, condition):
         return start_chain(
@@ -54,6 +59,33 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(sum(r.mediated_rewrite is not None for r in state.records), 4)
         with self.assertRaises(ValueError):
             advance_chain(state, response(7))
+
+    def test_human_editor_four_steps_and_two_washout_steps(self):
+        state = self.make_chain(Condition.HUMAN_EDITED)
+        for g in range(1, 7):
+            previous = state.seed_text if not state.records else state.records[-1].human_produced_text
+            edit = human_edit(previous, g) if g <= 4 else None
+            state = advance_chain(state, response(g), human_edit=edit)
+            self.assertEqual(state.records[-1].received_text, edit.output_text if edit else previous)
+            self.assertEqual(state.records[-1].human_edit is not None, g <= 4)
+            self.assertIsNone(state.records[-1].mediated_rewrite)
+
+    def test_human_edit_missing_or_misplaced_fails(self):
+        with self.assertRaisesRegex(ValueError, "requires a versioned human edit"):
+            advance_chain(self.make_chain(Condition.HUMAN_EDITED), response(1))
+        with self.assertRaisesRegex(ValueError, "prohibits human editing"):
+            advance_chain(self.make_chain(Condition.HUMAN_ONLY), response(1), human_edit=human_edit("mavren", 1))
+        state = self.make_chain(Condition.HUMAN_EDITED)
+        for g in range(1, 5):
+            state = advance_chain(state, response(g), human_edit=human_edit("mavren", g))
+        with self.assertRaisesRegex(ValueError, "prohibits human editing"):
+            advance_chain(state, response(5), human_edit=human_edit("mavren", 5))
+
+    def test_human_editor_provenance_and_word_preservation(self):
+        with self.assertRaises(ValueError):
+            HumanEdit("mavren", "editor", "bad-hash", "run")
+        with self.assertRaisesRegex(ValueError, "exact nonce_form"):
+            advance_chain(self.make_chain(Condition.HUMAN_EDITED), response(1), human_edit=human_edit("no target", 1))
 
     def test_human_only_never_rewrites(self):
         state = self.make_chain(Condition.HUMAN_ONLY)
