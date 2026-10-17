@@ -88,6 +88,13 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             start_chain("one", Condition.HUMAN_ONLY, "concept", "mavren", "Only mavrens appears.")
 
+    def test_nonce_forms_are_case_sensitive(self):
+        with self.assertRaisesRegex(ValueError, "seed_text"):
+            start_chain(
+                "case-check", Condition.HUMAN_ONLY, "concept", "mavren",
+                "Mavren is not the lowercase form.",
+            )
+
     def test_reused_participant_rejected(self):
         state = self.make_chain(Condition.HUMAN_ONLY)
         state = advance_chain(state, response(1))
