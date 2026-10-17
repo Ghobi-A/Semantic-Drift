@@ -59,13 +59,15 @@ python -m norming.preview --slot 1 --out norming-preview.html
 python -m norming.summary path/to/approved_responses.csv
 ```
 
+Apply the fixed pilot screening rules in [the norming protocol](docs/norming_survey.md): 20 valid ratings, reject if the 95% CI excludes 0 or |mean| > 0.5, plus at least 90% adjudicated denotation agreement and 85% initial two-rater agreement. Passing is **not proof of neutrality**; independent validation remains required.
+
 Do not use the offline preview as a live Prolific questionnaire; it only exports local files. Study launch requires approved consent/privacy materials, persistent capture, stable Prolific session mapping and a completion redirect.
 
 ## Roadmap
 
 - [x] Define deterministic three-arm chain/washout invariants, provenance schema and tests
 - [x] Document first protocol and candidate analysis plan
-- [ ] Independently pretest 8–12 affectively ambiguous nonce-word/concept pairs
+- [ ] Screen the 20 candidate concepts using frozen valence / blinded denotation criteria, then independently validate 8–12 retained concepts
 - [ ] Implement a privacy-conscious participant interface, backed by durable storage and blinded independent ratings
 - [ ] Integrate and pin one LLM rewriting provider with complete request/response logs
 - [ ] Pilot measurement reliability and chain-level variance; simulation-based sample-size determination

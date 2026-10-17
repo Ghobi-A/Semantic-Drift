@@ -57,20 +57,27 @@ Raw Prolific identifiers are personal-data-linked pseudonyms; store the mapping 
 
 ## Scoring / item selection (MUST freeze before inspecting human responses)
 
-- **Valence:** sample mean on −3..+3; provisional screen `abs(mean) <= 0.75`. Report uncertainty (bootstrap interval) and variability, **not** just observed means.
+- **Valence exclusion rule (frozen here prior to data collection):** exclude a concept if **either** its two-sided 95% one-sample Student-t confidence interval for the mean **excludes 0**, **or** `abs(unrounded_sample_mean) > 0.5` on the −3..+3 scale. Exactly 20 valid ratings per concept are required for an automatic screening decision; otherwise flag **insufficient data**, do not silently accept. At n=20, use t critical 2.093024 (19 df); do not switch to normal-approximation CI after seeing data. This is **screening, not equivalence testing or certification of neutrality**; even a retained concept needs independent validation.
+- **Valence uncertainty:** report the unrounded mean, sample SD, CI endpoints, number of positive/negative responses and deviations from planned missingness. Do not optimise for large variance; heterogeneity may reflect contradictory or misunderstood interpretations.
 - **Affective ambiguity:** record dispersion (SD and polarity split), but do not blindly maximise variance; bimodality may reflect group priors or misunderstood denotation.
-- **Denotation:** independent, blinded raters code paraphrase agreement against a concept-specific checklist; a provisional screen is **at least 80% correct**; retain rater disagreement and calculate reliability. Ratios from ~20 responses per concept are exploratory and imprecise.
+- **Denotation exclusion rule (strict screening):** two independently blinded raters score each paraphrase against a **prewritten concept-specific checklist**; record their independent binary codes and a documented adjudication where they disagree. Retain a concept only when **at least 18 of 20 (90%)** paraphrases are adjudicated correct, **and at least 17 of 20 (85%)** receive concordant initial rater codes. A failure is a rejection; missing rater codes or fewer than 20 unique linked responses make the item **insufficient**, never accepted. Report raw rater agreement and a chance-corrected agreement coefficient (including prevalence limitations) as a diagnostic; 90% from 20 remains imprecise.
 - **Form effects:** check whether particular surface forms consistently drive affect/familiarity. Rare or familiar forms must be replaced and retested.
-- **Selection:** choose 8–12 candidates meeting both semantic agreement and valence criteria, balancing their diversity of referents. Record all excluded candidates/reasons; do not retrospectively tune thresholds.
+- **Selection:** keep only candidates that pass **both** independently specified valence and denotation screens. Choose up to 12 from the passing set using a concept diversity rationale recorded before looking at main-study outcomes; **do not fill a minimum quota of eight by relaxing criteria**. If fewer than eight pass, create and norm a new batch rather than redefining neutrality. Preserve every excluded candidate and reason, including insufficient observations.
 - Do **not** claim equivalence from failure to detect a difference. Avoid selecting items by extremal variance without independent replication (winner's curse).
-- A second independent validation sample is strongly preferable before final confirmatory stimulus selection.
+- A **second independent validation sample is required** before final confirmatory stimulus selection: 20 pilot ratings per candidate can efficiently reject implausible items, but cannot establish tight neutrality bounds. Freeze that validation analysis and sample size separately.
+
+## Machine-readable screening
+
+Run `python -m norming.screen responses.csv blinded_denotation_codes.csv` **only after** real approved responses exist. It reports **retain_for_validation**, **reject**, or **insufficient**, along with explicit criteria and confidence intervals. The expected blinded code CSV columns are `participant_slot,concept_id,rater_a_correct,rater_b_correct,adjudicated_correct` with binary 0/1 values, one row per actual paraphrase. A pilot item is not a validated neutral stimulus merely because it passes screening.
+
+The candidate definitions include deliberately competing social interpretations, but a few may still be valenced by construction. They remain **unvalidated**, including revised `maruni`, `sevlin` and `veluni`. A second pilot inventory is preferable to retaining an obviously biased item. Keep failed candidates documented rather than silently editing definitions after inspecting ratings.
 
 ## Prolific setup and launch gates
 
-1. Obtain research ethics determination and finalise consent, privacy notice, retention and withdrawal. Determine UK GDPR responsibilities before recruitment.
+1. **Obtain an applicable ethics determination before recruitment**, including even a small external participant timing pilot. Finalise consent, privacy notice, retention and withdrawal and determine UK GDPR responsibilities. See [ethics route](ethics_route.md).
 2. Configure a real compatible hosted questionnaire, with an anonymous access link, stable `PROLIFIC_PID` / study/session ID capture, atomic participant-slot allocation, secure response storage and working completion redirect/code.
 3. Internally preview every route, test persistence and completion handling, check mobile accessibility, and verify no PII is required by free text.
-4. Time the exact ten-item task with several internal volunteers, set Prolific duration/reward based on **observed** completion times; monitor hourly pay if participants take longer.
+4. After the appropriate ethics determination, run 2–3 consented dry-run participants to measure actual time and UX, then set Prolific duration/reward based on **observed** completion times; monitor hourly pay if participants take longer.
 5. Pilot on a small number of paid participants before releasing the full 40 slots; avoid irreversible publication without checking.
 
 **Budget illustration (not a quote):** 40 participants × 15 minutes × £9/hour = £90 in base rewards. At 33.3% academic platform fee ≈ £120, or at 42.8% corporate ≈ £128.52, before any applicable platform-fee VAT. Actual eligibility for discounted academic fees is not assumed. If 10 minutes is validated, base rewards are £60 and total fees roughly £80–£85.68 before VAT. No money has been spent.
