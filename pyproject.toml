@@ -1,0 +1,13 @@
+[project]
+name = "semantic-drift-research"
+version = "0.1.0"
+description = "Auditable prototype for human–LLM iterated lexical transmission"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["semantic_drift*"]
