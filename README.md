@@ -15,6 +15,7 @@ The original observer-conditioned semantics proposal is the theoretical motivati
 Both arms start from identical generation-zero (`g0`) vignette seeds. One human participant supplies a valence rating, a denotation paraphrase, a confidence rating and a newly written vignette in each generation `g1`–`g6`.
 
 - **Human-only:** each `g1`–`g6` participant receives the previous text *without* an LLM step.
+- **Human editor (active control):** a separately recruited human editor performs the same type of clarity/fluency rewrite on incoming edges to g1–g4; no editor on g5–g6.
 - **LLM-mediated:** exactly four edges are mediated: `g0→g1`, `g1→g2`, `g2→g3`, and `g3→g4`.
 - **Washout:** `g4→g5` and `g5→g6` transmit human text *without* an LLM step in both arms.
 
@@ -39,16 +40,16 @@ Requires Python 3.11+. No provider API keys or recruited participants are needed
 
 ## Scientific boundaries
 
-1. **Unit of independent replication:** transmission chain. Multiple words judged by one participant are correlated repeated measures.
+1. **Unit of independent replication:** transmission chain. The proposed three-arm design includes a human-editor active control to isolate differences between editing protocols. Multiple words judged by one participant are correlated repeated measures.
 2. **Main outcomes:** human valence ratings; independent, blinded human ratings of denotational fidelity. Embedding-based scores are supplementary diagnostics.
-3. **Primary comparison:** treatment–control valence differences at generation 4; persistence at generation 6. Normal human-chain drift is not evidence of an LLM effect.
+3. **Primary contrast (draft):** LLM editor minus human editor at generation 4; compare generation 4 and generation 6 contrasts for washout attenuation. The human-only arm is an unedited drift baseline.
 4. **Model versioning:** do not silently substitute model versions, prompts, decoding parameters, or failed provider calls.
 5. **Causal scope:** a controlled result would establish an effect of the *specified rewriting intervention under the tested conditions*, not that LLMs caused societal semantic change.
 6. **Human research:** secure ethics/data-protection review, consent and a registered analysis plan **before** collecting confirmatory participant data.
 
 ## Roadmap
 
-- [x] Define deterministic chain/washout invariants, provenance schema and tests
+- [x] Define deterministic three-arm chain/washout invariants, provenance schema and tests
 - [x] Document first protocol and candidate analysis plan
 - [ ] Independently pretest 8–12 affectively ambiguous nonce-word/concept pairs
 - [ ] Implement a privacy-conscious participant interface, backed by durable storage and blinded independent ratings

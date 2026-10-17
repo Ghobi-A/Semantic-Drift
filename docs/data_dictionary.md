@@ -5,7 +5,7 @@
 | Field | Type / meaning |
 |---|---|
 | `chain_id` | pseudonymous chain-level randomisation ID |
-| `condition` | `human_only` or `llm_mediated` |
+| `condition` | `human_only`, `human_edited`, or `llm_mediated` |
 | `concept_id` | stable seeded referent ID |
 | `nonce_form` | 4–16-letter lower-case form, counterbalanced across concepts |
 | `generation` | human generation 1–6; g0 is seed, not a participant |
@@ -16,7 +16,8 @@
 | `meaning_paraphrase` | participant's interpretation |
 | `confidence` | finite 0–100 |
 | `human_produced_text` | next-generation candidate text |
-| `mediated_rewrite` | null on all control edges and both washout edges |
+| `mediated_rewrite` | LLM rewrite on g1–g4 in arm C only |
+| `human_edit` | human-editor output, pseudonymous editor ID, instruction SHA-256 and run ID on g1–g4 in arm B only |
 | `mediated_rewrite.output_text` | exact model rewrite shown to current participant |
 | `mediated_rewrite.model_id` | vendor or model identifier |
 | `mediated_rewrite.model_version` | pinned model revision/snapshot |
@@ -37,4 +38,4 @@ Additional linked tables (not implemented): instrument/stimulus pretests, blinde
 
 ## Limits of the current code
 
-The prototype enforces local state-transition invariants but **does not** provide authentication, a persistent database, concurrent access control, participant-session randomisation, LLM API integration, blinded annotation, sample-size determination or a preregistered analysis model. Those components must be added and tested before recruitment.
+The three-arm prototype enforces local state-transition invariants but **does not** provide authentication, a persistent database, concurrent access control, participant-session randomisation, LLM API integration, blinded annotation, sample-size determination or a preregistered analysis model. Those components must be added and tested before recruitment.
