@@ -47,6 +47,20 @@ Requires Python 3.11+. No provider API keys or recruited participants are needed
 5. **Causal scope:** a controlled result would establish an effect of the *specified rewriting intervention under the tested conditions*, not that LLMs caused societal semantic change.
 6. **Human research:** secure ethics/data-protection review, consent and a registered analysis plan **before** collecting confirmatory participant data.
 
+## Exploratory stimulus norming (not yet launched)
+
+The draft includes **20 candidate concepts** and a **40-slot balanced incomplete-block design** (10 items per participant; 20 observations per concept). These are prospective allocations, **not collected observations**. See [the norming instrument](docs/norming_survey.md) and [candidate inventory](norming/candidates.csv).
+
+```bash
+python -m norming.export_assignments --out norming_assignments.csv
+python -m norming.preview --slot 1 --out norming-preview.html
+# Open norming-preview.html locally; this does not submit to a server.
+# After approved human data collection only:
+python -m norming.summary path/to/approved_responses.csv
+```
+
+Do not use the offline preview as a live Prolific questionnaire; it only exports local files. Study launch requires approved consent/privacy materials, persistent capture, stable Prolific session mapping and a completion redirect.
+
 ## Roadmap
 
 - [x] Define deterministic three-arm chain/washout invariants, provenance schema and tests
