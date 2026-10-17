@@ -10,10 +10,48 @@ from dataclasses import dataclass, replace
 from enum import Enum
 import math
 import re
+from hashlib import sha256
 
 
 GENERATIONS = 6
 MEDIATED_GENERATIONS = frozenset({1, 2, 3, 4})
+
+# Static editor instruction. Both human and model editors receive this same text,
+# alongside the same word and current vignette as separate task inputs.
+SHARED_EDITOR_INSTRUCTION = (
+    "Improve the clarity and fluency of this passage while preserving its "
+    "intended meaning. Keep the target word exactly unchanged. "
+    "Do not add information not present in the passage."
+)
+SHARED_EDITOR_INSTRUCTION_SHA256 = sha256(
+    SHARED_EDITOR_INSTRUCTION.encode("utf-8")
+).hexdigest()
+
+
+def normalized_token_edit_distance(source: str, edited: str) -> float:
+    """Token-level Levenshtein / max token count; zero means identical.
+
+    A descriptive post-intervention measure; conditioning on this in the
+    primary C-vs-B contrast would generally be post-treatment adjustment.
+    """
+    if not isinstance(source, str) or not isinstance(edited, str):
+        raise TypeError("source and edited must be strings")
+    left, right = source.split(), edited.split()
+    if not left and not right:
+        return 0.0
+    if len(right) > len(left):
+        left, right = right, left
+    row = list(range(len(right) + 1))
+    for i, token in enumerate(left, start=1):
+        next_row = [i]
+        for j, other in enumerate(right, start=1):
+            next_row.append(min(
+                row[j] + 1, next_row[j-1] + 1,
+                row[j-1] + (token != other),
+            ))
+        row = next_row
+    return row[-1] / max(len(left), len(right))
+
 
 
 class Condition(str, Enum):
@@ -68,8 +106,8 @@ class MediatedRewrite:
     def __post_init__(self) -> None:
         for name in ("output_text", "model_id", "model_version", "run_id", "decoding_parameters_json"):
             _nonblank(getattr(self, name), name)
-        if not re.fullmatch(r"[0-9a-f]{64}", self.prompt_sha256):
-            raise ValueError("prompt_sha256 must contain 64 lowercase hex characters")
+        if self.prompt_sha256 != SHARED_EDITOR_INSTRUCTION_SHA256:
+            raise ValueError("prompt_sha256 must match the pinned shared editor instruction")
 
 
 @dataclass(frozen=True)
@@ -83,8 +121,8 @@ class HumanEdit:
     def __post_init__(self) -> None:
         for name in ("output_text", "editor_code", "edit_run_id"):
             _nonblank(getattr(self, name), name)
-        if not re.fullmatch(r"[0-9a-f]{64}", self.instruction_sha256):
-            raise ValueError("instruction_sha256 must contain 64 lowercase hex characters")
+        if self.instruction_sha256 != SHARED_EDITOR_INSTRUCTION_SHA256:
+            raise ValueError("instruction_sha256 must match the pinned shared editor instruction")
 
 
 @dataclass(frozen=True)
@@ -93,6 +131,7 @@ class StepRecord:
     participant_code: str
     transmission_source_text: str  # g0 seed or preceding human's output
     received_text: str  # only text the current human sees
+    normalized_edit_distance: float  # edited input vs previous human/seed
     mediated_rewrite: MediatedRewrite | None
     human_edit: HumanEdit | None
     valence_rating: float
@@ -141,9 +180,9 @@ def advance_chain(
 ) -> ChainState:
     """Append one human generation after enforcing the preregistered schedule.
 
-    The external orchestration layer must generate and save the rewrite *before*
-    submitting a response. A failed or absent rewrite raises an error; there is
-    no automatic fallback to human-only transmission.
+    The external orchestration layer must generate and save the intervention
+    *before* submitting a response. Missing or mismatched editor output fails
+    closed; it must never silently become human-only transmission.
     """
     if not isinstance(state, ChainState) or not isinstance(response, ParticipantResponse):
         raise TypeError("expected ChainState and ParticipantResponse")
@@ -181,6 +220,7 @@ def advance_chain(
         participant_code=response.participant_code,
         transmission_source_text=source_text,
         received_text=received_text,
+        normalized_edit_distance=normalized_token_edit_distance(source_text, received_text),
         mediated_rewrite=rewrite,
         human_edit=human_edit,
         valence_rating=response.valence_rating,

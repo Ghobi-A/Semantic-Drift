@@ -12,6 +12,7 @@
 | `participant_code` | random code, not name/email/IP address |
 | `transmission_source_text` | g0 seed or immediately preceding human output |
 | `received_text` | exact vignette shown to the human |
+| `normalized_edit_distance` | incoming-edge token Levenshtein distance / max token count, measured before participant response; 0 for unedited edges |
 | `valence_rating` | finite 0–100, 50 = neutral |
 | `meaning_paraphrase` | participant's interpretation |
 | `confidence` | finite 0–100 |
@@ -21,7 +22,7 @@
 | `mediated_rewrite.output_text` | exact model rewrite shown to current participant |
 | `mediated_rewrite.model_id` | vendor or model identifier |
 | `mediated_rewrite.model_version` | pinned model revision/snapshot |
-| `mediated_rewrite.prompt_sha256` | SHA-256 of frozen prompt; complete prompt must be stored separately in version control |
+| `mediated_rewrite.prompt_sha256` | SHA-256 of the **same frozen shared editor instruction** used by human editors; full raw provider messages are separately archived |
 | `mediated_rewrite.run_id` | immutable reference to external request+response log |
 | `mediated_rewrite.decoding_parameters_json` | canonical full generation-parameter JSON |
 
@@ -30,6 +31,7 @@ Additional linked tables (not implemented): instrument/stimulus pretests, blinde
 ## Operational constraints
 
 - Store timestamped API request/response events (including errors) and signed model/config snapshots in secured systems. Log all attempts, but do not expose them to participants.
+- Use the identically worded shared editor instruction with both editing arms. Recruit human editors from the same eligible participant pool while prohibiting role collision within a chain. Preserve each incoming-edge edit magnitude as a post-treatment diagnostic.
 - Preserve the exact text before and after each model step. Do not silently regenerate or cleanse a "failed" trial.
 - Human participants should receive only their current `received_text`, an anonymous response form and the relevant word; never send complete `ChainState` to browsers.
 - Use isolated access-controlled identifiers for contact information, recruitment payments or withdrawal links. Do not commit PII, IP addresses, raw participant exports or secrets.
