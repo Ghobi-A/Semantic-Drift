@@ -18,7 +18,9 @@ Each chain has one common generation-zero seed for each target concept. Each hum
 - **Arm B:** a separately recruited human editor rewrites the incoming text on edges to g1–g4; edges to g5–g6 are unedited washout.
 - **Arm C:** a fixed LLM rewrites the incoming text on edges to g1–g4; edges to g5–g6 are unedited washout.
 - **Both editing arms:** match editing objectives, input constraints and exposure counts as closely as practical. Log human-editor eligibility and editor identifiers separately from transmission participants.
-- **Rewriter:** one prespecified model version, frozen prompt, fixed decoding specification. Example instruction: "Improve clarity and fluency while preserving the intended meaning. Keep the target word exactly unchanged." Do not add a "preserve sentiment" constraint.
+- **Matched editor instruction:** exactly the same text is versioned in `semantic_drift/protocol.py` as `SHARED_EDITOR_INSTRUCTION` and presented to **both human and LLM editors**. The word and vignette must be presented as corresponding separate inputs; no arm-specific rewording. The protocol validates its SHA-256 in either editor's provenance. Do not add a "preserve sentiment" constraint.
+- **Human editor selection:** recruit editors from the same *eligible sampling frame* as transmission participants. Randomise roles, ensure editor and human transmission identities do not overlap within a chain, and record qualifications/familiarity. Shared sampling eligibility reduces selection differences; it cannot equalise ability or internal model priors.
+- **Rewriter:** one prespecified model version, frozen decoding specification, full raw API request/response log including any separate system instructions. A matching SHA-256 **alone** does not verify prompt delivery; an integration-level audit is required.
 - **No substitution:** absent/malformed human-editor or LLM output aborts the affected transition; do not silently fall back to another arm.
 - **No participant repetition:** no participant should appear in multiple generations of the same chain. The enrollment service must additionally prevent unplanned participation across chains/arms.
 
@@ -68,6 +70,7 @@ The preregistration must specify a primary effect measure, smallest effect size 
 - Human iterated-learning chains drift even without AI; ordinary drift cannot establish an algorithmic effect.
 - All words must be genuinely novel to participants as far as practical; lexical subword associations can still remain in the LLM.
 - Both editing arms contain an extra operator. The principal C−B contrast tests the specified human-versus-LLM editing procedures, not a uniquely intrinsic property of AI.
+- **Edit magnitude (recorded on every edge):** token-level normalised Levenshtein edit distance = edit operations / max(source tokens, edited tokens). Report the distribution by stage and arm; also consider changes in text length and topical content. Edit magnitude is **post-treatment**, so including it as a covariate in the primary model would change the estimand and could introduce collider bias. Use it for a preregistered *descriptive diagnostic* or explicitly labelled sensitivity/mediation analyses, not as an automatic correction for treatment imbalance.
 - Keep pre- and post-model text, exact provenance and any failed attempts; never infer semantic change solely from embedding cosine distance.
 - A one-model, nonce-word experiment cannot establish universal behaviour across models, languages or real-world social discourse.
 - Treat null washout effects as substantive evidence about the boundary of persistence, not a failed project.

@@ -19,6 +19,8 @@ Both arms start from identical generation-zero (`g0`) vignette seeds. One human 
 - **LLM-mediated:** exactly four edges are mediated: `g0→g1`, `g1→g2`, `g2→g3`, and `g3→g4`.
 - **Washout:** `g4→g5` and `g5→g6` transmit human text *without* an LLM step in both arms.
 
+Both editor arms use the **same pinned instruction** (SHA-256-verified in the core protocol). Token-normalised Levenshtein edit magnitude is recorded for each incoming edge and evaluated descriptively, not included automatically as a post-treatment primary covariate. Human editors should be drawn from the same eligible participant pool with separate roles and no same-chain collisions.
+
 The model's operation is a fixed, versioned rewriting instruction intended to improve clarity while preserving intended meaning and the exact target word. Sentiment preservation must **not** be explicitly requested. An LLM rewrite is **not** a substitute for a human observation.
 
 ## Start here

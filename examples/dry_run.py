@@ -8,6 +8,7 @@ import json
 
 from semantic_drift.protocol import (
     Condition, MediatedRewrite, ParticipantResponse, advance_chain, start_chain,
+    SHARED_EDITOR_INSTRUCTION_SHA256,
 )
 
 
@@ -24,7 +25,7 @@ def main() -> None:
                 output_text=previous_text,  # Identity operator; no external LLM
                 model_id="test-only-identity-operator",
                 model_version="not-an-llm",
-                prompt_sha256="0" * 64,
+                prompt_sha256=SHARED_EDITOR_INSTRUCTION_SHA256,
                 run_id=f"synthetic-{generation}",
                 decoding_parameters_json="{}",
             )

@@ -7,6 +7,8 @@ from semantic_drift.protocol import (
     ParticipantResponse,
     advance_chain,
     start_chain,
+    SHARED_EDITOR_INSTRUCTION_SHA256,
+    normalized_token_edit_distance,
 )
 
 
@@ -25,14 +27,14 @@ def rewrite(text: str, generation: int):
         output_text="Rewritten: " + text,
         model_id="mock-identity",
         model_version="test-only",
-        prompt_sha256="a" * 64,
+        prompt_sha256=SHARED_EDITOR_INSTRUCTION_SHA256,
         run_id=f"test-run-{generation}",
         decoding_parameters_json='{"temperature":0}',
     )
 
 
 def human_edit(text: str, generation: int):
-    return HumanEdit("Edited: " + text, f"editor-{generation}", "b" * 64, f"edit-{generation}")
+    return HumanEdit("Edited: " + text, f"editor-{generation}", SHARED_EDITOR_INSTRUCTION_SHA256, f"edit-{generation}")
 
 
 class ProtocolTests(unittest.TestCase):
@@ -41,6 +43,25 @@ class ProtocolTests(unittest.TestCase):
             "chain-1", condition, "pause-before-reply", "mavren",
             "Mavren is a practice of pausing before replying to a request. mavren.",
         )
+
+    def test_edit_magnitude_measured_at_each_incoming_edge(self):
+        self.assertEqual(normalized_token_edit_distance("a b", "a c"), 0.5)
+        self.assertEqual(normalized_token_edit_distance("a", "a b"), 0.5)
+        self.assertEqual(normalized_token_edit_distance("", ""), 0)
+        self.assertEqual(normalized_token_edit_distance("a", "b"), 1)
+        state = advance_chain(self.make_chain(Condition.LLM_MEDIATED), response(1),
+                              rewrite("mavren is more concise.", 1))
+        record = state.records[-1]
+        self.assertGreater(record.normalized_edit_distance, 0)
+        self.assertLessEqual(record.normalized_edit_distance, 1)
+        control = advance_chain(self.make_chain(Condition.HUMAN_ONLY), response(1))
+        self.assertEqual(control.records[-1].normalized_edit_distance, 0)
+
+    def test_non_matching_pinned_editor_instruction_fails(self):
+        with self.assertRaisesRegex(ValueError, "pinned shared editor instruction"):
+            rewrite("mavren", 1).__class__("mavren", "test", "v1", "f"*64, "r", "{}")
+        with self.assertRaisesRegex(ValueError, "pinned shared editor instruction"):
+            HumanEdit("mavren", "anon", "f"*64, "edit")
 
     def test_exactly_four_rewrites_then_two_washout_steps(self):
         state = self.make_chain(Condition.LLM_MEDIATED)
