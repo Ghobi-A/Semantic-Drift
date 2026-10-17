@@ -14,7 +14,7 @@ from semantic_drift.protocol import (
 def main() -> None:
     state = start_chain(
         "example-synthetic-chain", Condition.LLM_MEDIATED, "pause-practice",
-        "mavren", "Mavren means pausing before responding to someone's request.",
+        "mavren", "mavren means pausing before responding to someone's request.",
     )
     for generation in range(1, 7):
         previous_text = state.seed_text if not state.records else state.records[-1].human_produced_text
