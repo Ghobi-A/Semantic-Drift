@@ -27,6 +27,20 @@ class RandomizationTests(unittest.TestCase):
         })
         self.assertEqual(len({a.chain_id for a in assignments}), 24)
 
+    def test_chain_ids_do_not_reveal_condition(self):
+        for seed in range(50):
+            assignments = self.allocations(8, seed=seed)
+            for a in assignments:
+                self.assertRegex(a.chain_id, r"^chain-\d{3,}$")
+                for condition in Condition:
+                    self.assertNotIn(condition.value, a.chain_id)
+        # The ID order is the shuffled order, so arms are not contiguous blocks.
+        ordered = sorted(self.allocations(8), key=lambda a: a.chain_id)
+        self.assertNotEqual(
+            [a.condition for a in ordered],
+            sorted((a.condition for a in ordered), key=lambda c: c.value),
+        )
+
     def test_complete_latin_square_counterbalance(self):
         for condition in Condition:
             subset = [a for a in self.allocations(4) if a.condition is condition]

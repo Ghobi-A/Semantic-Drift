@@ -12,7 +12,7 @@ The original observer-conditioned semantics proposal is the theoretical motivati
 
 ## Conditions and generation convention
 
-Both arms start from identical generation-zero (`g0`) vignette seeds. One human participant supplies a valence rating, a denotation paraphrase, a confidence rating and a newly written vignette in each generation `g1`–`g6`.
+Both arms start from identical generation-zero (`g0`) vignette seeds. One human participant supplies a denotation paraphrase, a valence rating of the word in a fixed neutral probe sentence (−3..+3, the primary outcome), a separate rating of the received passage's tone, a confidence rating and a newly written vignette in each generation `g1`–`g6`.
 
 - **Human-only:** each `g1`–`g6` participant receives the previous text *without* an LLM step.
 - **Human editor (active control):** a separately recruited human editor performs the same type of clarity/fluency rewrite on incoming edges to g1–g4; no editor on g5–g6.

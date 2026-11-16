@@ -30,6 +30,10 @@ def allocate_chains(
     Complete form counterbalancing requires chains_per_condition to be a multiple
     of the number of concepts; otherwise counts differ by at most one per concept.
     This is a reproducible *allocation plan*, not a participant recruitment tool.
+
+    chain_id is opaque: it is numbered after the final shuffle, so it carries no
+    information about the arm. Only this manifest links chain_id to condition;
+    keep it away from participants, editors and blinded raters.
     """
     if type(chains_per_condition) is not int or chains_per_condition < 1:
         raise ValueError("chains_per_condition must be a positive integer")
@@ -50,18 +54,20 @@ def allocate_chains(
     rng.shuffle(forms)
     rng.shuffle(concepts)
     k = len(concepts)
-    assignments: list[ChainAssignment] = []
+    plan: list[tuple[Condition, tuple[tuple[str, str], ...]]] = []
 
     for condition in (Condition.HUMAN_ONLY, Condition.HUMAN_EDITED, Condition.LLM_MEDIATED):
         offsets = [index % k for index in range(chains_per_condition)]
         rng.shuffle(offsets)
-        for index, offset in enumerate(offsets, start=1):
+        for offset in offsets:
             mapping = tuple(
                 (concept, forms[(position + offset) % k])
                 for position, concept in enumerate(concepts)
             )
-            assignments.append(
-                ChainAssignment(f"{condition.value}-{index:03d}", condition, mapping)
-            )
-    rng.shuffle(assignments)
-    return tuple(assignments)
+            plan.append((condition, mapping))
+    rng.shuffle(plan)
+    width = max(3, len(str(len(plan))))
+    return tuple(
+        ChainAssignment(f"chain-{position:0{width}d}", condition, mapping)
+        for position, (condition, mapping) in enumerate(plan, start=1)
+    )

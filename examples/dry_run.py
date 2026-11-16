@@ -8,7 +8,7 @@ import json
 
 from semantic_drift.protocol import (
     Condition, MediatedRewrite, ParticipantResponse, advance_chain, start_chain,
-    SHARED_EDITOR_INSTRUCTION_SHA256,
+    SHARED_EDITOR_INSTRUCTION_SHA256, editor_request_sha256,
 )
 
 
@@ -27,13 +27,15 @@ def main() -> None:
                 model_version="not-an-llm",
                 prompt_sha256=SHARED_EDITOR_INSTRUCTION_SHA256,
                 run_id=f"synthetic-{generation}",
-                decoding_parameters_json="{}",
+                decoding_parameters_json='{"seed": null, "temperature": 0}',
+                request_sha256=editor_request_sha256("mavren", previous_text),
             )
         state = advance_chain(
             state,
             ParticipantResponse(
                 participant_code=f"synthetic-p{generation}",
-                valence_rating=50,  # made up; never use as real data
+                valence_rating=0,  # made up; never use as real data
+                passage_tone_rating=0,  # made up
                 meaning_paraphrase="Pausing before responding",
                 confidence=80,
                 human_produced_text=previous_text,

@@ -4,7 +4,7 @@
 
 | Field | Type / meaning |
 |---|---|
-| `chain_id` | pseudonymous chain-level randomisation ID |
+| `chain_id` | opaque chain ID (`chain-NNN`), numbered after the allocation shuffle so it does not reveal the arm; only the allocation manifest links it to `condition` |
 | `condition` | `human_only`, `human_edited`, or `llm_mediated` |
 | `concept_id` | stable seeded referent ID |
 | `nonce_form` | 4–16-letter lower-case form, counterbalanced across concepts |
@@ -13,7 +13,8 @@
 | `transmission_source_text` | g0 seed or immediately preceding human output |
 | `received_text` | exact vignette shown to the human |
 | `normalized_edit_distance` | incoming-edge token Levenshtein distance / max token count, measured before participant response; 0 for unedited edges |
-| `valence_rating` | finite 0–100, 50 = neutral |
+| `valence_rating` | **primary outcome**: integer −3..+3 (0 = neither) for the word in the neutral probe sentence `NEUTRAL_PROBE_TEMPLATE`; same scale and wording as norming |
+| `passage_tone_rating` | integer −3..+3, tone of `received_text`; diagnostic, kept separate from the primary outcome |
 | `meaning_paraphrase` | participant's interpretation |
 | `confidence` | finite 0–100 |
 | `human_produced_text` | next-generation candidate text |
@@ -24,7 +25,9 @@
 | `mediated_rewrite.model_version` | pinned model revision/snapshot |
 | `mediated_rewrite.prompt_sha256` | SHA-256 of the **same frozen shared editor instruction** used by human editors; full raw provider messages are separately archived |
 | `mediated_rewrite.run_id` | immutable reference to external request+response log |
-| `mediated_rewrite.decoding_parameters_json` | canonical full generation-parameter JSON |
+| `mediated_rewrite.decoding_parameters_json` | JSON object; must state `temperature` and `seed` (`null` if unsupported). Constant within a chain apart from the seed |
+| `mediated_rewrite.request_sha256`, `human_edit.request_sha256` | hash of the complete canonical editor request (instruction, target word, source passage); must match the edge's `transmission_source_text` |
+| `failed_editor_attempts` | up to two logged failed editor attempts (`run_id`, `reason`) before the accepted one; empty on unedited edges |
 
 Additional linked tables (not implemented): instrument/stimulus pretests, blinded independent denotation and context-valence ratings, rater IDs, participant-to-chain enrolment constraint, randomisation manifest, provider failures/retries, ethics and withdrawal ledger.
 
